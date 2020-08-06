@@ -19,7 +19,21 @@ def close_db(err):
 def index():
     user_info=get_current_user()
     if user_info:
-        return render_template('home.html',user_info=user_info)
+
+        #database part
+        conn=database.get_db()
+        cur=conn.cursor()
+        cur.execute(""" 
+            SELECT name FROM users JOIN questions on questions.user_id=users.id 
+            AND questions.answer_text is NOT NULL
+        """)
+        asked_by=cur.fetchall()
+        cur.execute(""" 
+            SELECT name FROM users JOIN questions on questions.expert_id=users.id 
+            AND questions.answer_text is NOT NULL
+        """)
+        answered_by=cur.fetchall()
+        return render_template('home.html',user_info=user_info,asked_by=asked_by,answered_by=answered_by)
     return render_template('home.html',user_info=user_info)
 
 @app.route('/register',methods=['GET','POST'])
@@ -149,7 +163,7 @@ def unanswered():
         cur.execute(""" 
             SELECT name,questions.id FROM users JOIN questions
             on users.id=questions.user_id AND questions.expert_id=(?)
-            AND questions.answer_text==NULL
+            AND questions.answer_text IS NULL
         """,(user_id,))
         asked_by=cur.fetchall()
         return render_template('unanswered.html',user_info=user_info,asked_by=asked_by)
