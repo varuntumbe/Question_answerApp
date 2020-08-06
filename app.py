@@ -44,8 +44,16 @@ def regi():
         name=request.form.get('name')
 
         #Database part
+
         conn=database.get_db()
         cur=conn.cursor()
+        #cheking for duplicate user
+        cur.execute(""" 
+            SELECT * FROM users WHERE name=(?)
+        """,(name,))
+        if len(cur.fetchall()) >= 1:
+            return render_template('register.html',user_info=None,error='username is already exists')
+
         cur.execute(""" 
             INSERT INTO users (name,password,expert,admin)
             VALUES (?,?,?,?)
@@ -81,30 +89,36 @@ def login():
 @app.route('/question')
 def question():
     user_info=get_current_user()
-
-    #database part
-    conn=database.get_db()
-    cur=conn.cursor()
-    cur.execute(""" 
-        SELECT * FROM questions 
-    """)
-    question_lists=cur.fetchall()
-    cur.execute(""" 
-        SELECT name FROM  users JOIN questions
-        WHERE users.id=questions.user_id 
-    """)
-    asked_by=cur.fetchall()
-    cur.execute(""" 
-        SELECT name FROM  users JOIN questions
-        WHERE users.id=questions.expert_id
-    """)
-    answered_by=cur.fetchall()
-    return render_template('question.html',questions_info=question_lists,
-    user_info=user_info,asked_by=asked_by,answered_by=answered_by)
+    if user_info:
+        #database part
+        conn=database.get_db()
+        cur=conn.cursor()
+        cur.execute(""" 
+            SELECT * FROM questions 
+        """)
+        question_lists=cur.fetchall()
+        cur.execute(""" 
+            SELECT name FROM  users JOIN questions
+            WHERE users.id=questions.user_id 
+        """)
+        asked_by=cur.fetchall()
+        cur.execute(""" 
+            SELECT name FROM  users JOIN questions
+            WHERE users.id=questions.expert_id
+        """)
+        answered_by=cur.fetchall()
+        return render_template('question.html',questions_info=question_lists,
+        user_info=user_info,asked_by=asked_by,answered_by=answered_by)
+    else:
+        return redirect(url_for('login'),code=302)
 
 @app.route('/answer/<question_id>')
 def answer(question_id):
     user_info=get_current_user()
+
+    if not user_info['expert']:
+        return redirect(url_for('index'))
+
     if user_info:
 
         #database part
@@ -173,26 +187,34 @@ def unanswered():
 @app.route('/users',methods=['GET','POST'])
 def users():
     user_info=get_current_user()
+    if not user_info['admin']:
+        return redirect(url_for('index'))
 
-    #database part
-    conn=database.get_db()
-    cur=conn.cursor()
-    cur.execute(""" 
-        SELECT id,name,expert,admin from users 
-    """)
-    users=cur.fetchall()
-    return render_template('users.html',user_info=user_info,users=users)
+    if user_info:
+        #database part
+        conn=database.get_db()
+        cur=conn.cursor()
+        cur.execute(""" 
+            SELECT id,name,expert,admin from users 
+        """)
+        users=cur.fetchall()
+        return render_template('users.html',user_info=user_info,users=users)
+    else:
+        return redirect(url_for('login'),code=302)
 
 @app.route('/logout')
 def logout():
 #    user_info=get_current_user()
     session.pop('user',None)
-    return redirect(url_for('index'),code=302)
+    return redirect(url_for('login'),code=302)
 
 
 @app.route('/promote/<username>')
 def promote(username):
     user_info=get_current_user()
+    if not user_info['admin']:
+        return redirect(url_for('index'))
+
     act=request.args.get('action')
     if user_info and username:
 

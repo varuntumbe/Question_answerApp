@@ -1,28 +1,10 @@
 
 {% extends "base.html" %}
+{% from "show_links.html" import show_links %}
 
 {% block nav %}
-{% if not user_info %}
-<li><a href="{{ url_for('login') }}">Login</a></li>
-<li><a href="{{ url_for('regi') }}">Register</a></li>
-{% endif %}
-{% if user_info and user_info.expert==0 and user_info.admin==0 %}
-<li><a href="{{ url_for('ask') }}">Ask Question</a></li>
-{% endif %}
-{% if user_info and user_info.expert==1 %}
-<li><a href="{{ url_for('unanswered') }}">Answer Questions</a></li>
-{% endif %}
-{% if user_info and user_info.admin==1 %}
-<li><a href="{{ url_for('users') }}">User Setup</a></li>
-{% endif %}
-{% if user_info %}
-<li><a href="{{ url_for('logout') }}">Logout</a></li>
-{% endif %}
-{% if user_info %}
-<li><a href="{{ url_for('question') }}">questions</a></li>
-{% endif %}
+{{ show_links(user_info) }}
 {% endblock %}
-
 
 {% block body %}
 <div class="container theme-showcase" role="main">

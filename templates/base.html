@@ -1,3 +1,4 @@
+{% from "show_links.html" import show_links %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -23,27 +24,8 @@
             <a class="navbar-brand" href="#">Questions & Answers</a>
           </div>
           <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-              <li class="active"><a href="{{ url_for('index') }}">Home</a></li>
-              {% block nav %}
-              {% if not user_info %}
-              <li><a href="{{ url_for('login') }}">Login</a></li>
-              <li><a href="{{ url_for('regi') }}">Register</a></li>
-              {% endif %}
-              {% if user_info and user_info.expert==0 and user_info.admin==0 %}
-              <li><a href="{{ url_for('ask') }}">Ask Question</a></li>
-              {% endif %}
-              {% if user_info and user_info.expert==1 %}
-              <li><a href="{{ url_for('unanswered') }}">Answer Questions</a></li>
-              {% endif %}
-              {% if user_info and user_info.admin==1 %}
-              <li><a href="{{ url_for('users') }}">User Setup</a></li>
-              {% endif %}
-              {% if user_info %}
-              <li><a href="{{ url_for('logout') }}">Logout</a></li>
-              {% endif %}
-              {% endblock %}
-            </ul>
+            {% block nav %}
+            {% endblock %}
           </div><!--/.nav-collapse -->
         </div>
       </nav>

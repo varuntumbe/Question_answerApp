@@ -1,7 +1,9 @@
-
 {% extends "base.html" %}
+{% from "show_links.html" import show_links %}
 
-
+{% block nav %}
+{{ show_links(user_info) }}
+{% endblock %}
 
 
 {% block body %}
@@ -13,6 +15,9 @@
     <div class="row">
       <div class="col-lg-12">
         <div class="well bs-component">
+          {% if error %}
+          <h2>{{ error }}</h2>
+          {% endif %}
           <form class="form-horizontal" method="POST" action="{{ url_for('regi') }}">
             <fieldset>
               <div class="form-group">
