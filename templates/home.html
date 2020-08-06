@@ -18,7 +18,9 @@
 {% if user_info %}
 <li><a href="{{ url_for('logout') }}">Logout</a></li>
 {% endif %}
-
+{% if user_info %}
+<li><a href="{{ url_for('question') }}">questions</a></li>
+{% endif %}
 {% endblock %}
 
 

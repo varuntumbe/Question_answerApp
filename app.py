@@ -67,18 +67,61 @@ def login():
 @app.route('/question')
 def question():
     user_info=get_current_user()
-    return render_template('question.html',user_info=user_info)
+
+    #database part
+    conn=database.get_db()
+    cur=conn.cursor()
+    cur.execute(""" 
+        SELECT * FROM questions 
+    """)
+    question_lists=cur.fetchall()
+    cur.execute(""" 
+        SELECT name FROM  users JOIN questions
+        WHERE users.id=questions.user_id 
+    """)
+    asked_by=cur.fetchall()
+    cur.execute(""" 
+        SELECT name FROM  users JOIN questions
+        WHERE users.id=questions.expert_id
+    """)
+    answered_by=cur.fetchall()
+    return render_template('question.html',questions_info=question_lists,
+    user_info=user_info,asked_by=asked_by,answered_by=answered_by)
 
 @app.route('/answer')
 def answer():
     user_info=get_current_user()
     return render_template('answer.html',user_info=user_info)
 
-@app.route('/ask')
+@app.route('/ask',methods=['GET','POST'])
 def ask():
     user_info=get_current_user()
+    if request.method=='POST' and user_info:
+        question_text=request.form.get('question_text')
+        expert_id=request.form.get('expert_id')
+        user_id=user_info['id']
+
+        #database part
+        conn=database.get_db()
+        cur=conn.cursor()
+        cur.execute(""" 
+            INSERT INTO questions (question_text,user_id,expert_id)
+            VALUES (?,?,?)
+        """,(question_text,user_id,expert_id))
+        conn.commit()
+
+        return redirect(url_for('question'),code=302)
+
     if user_info:
-        return render_template('ask.html',user_info=user_info)
+
+        #database part
+        conn=database.get_db()
+        cur=conn.cursor()
+        cur.execute(""" 
+            SELECT * FROM users WHERE expert=(?)
+        """,(True,))
+        expert_list=cur.fetchall()
+        return render_template('ask.html',user_info=user_info,expert_list=expert_list)
     else:
         return redirect(url_for('login'),code=302)
 

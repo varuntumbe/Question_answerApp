@@ -1,19 +1,45 @@
 
 {% extends "base.html" %}
 
-
+{% block nav %}
+{% if not user_info %}
+<li><a href="{{ url_for('login') }}">Login</a></li>
+<li><a href="{{ url_for('regi') }}">Register</a></li>
+{% endif %}
+{% if user_info and user_info.expert==0 and user_info.admin==0 %}
+<li><a href="{{ url_for('ask') }}">Ask Question</a></li>
+{% endif %}
+{% if user_info and user_info.expert==1 %}
+<li><a href="{{ url_for('answer') }}">Answer Questions</a></li>
+{% endif %}
+{% if user_info and user_info.admin==1 %}
+<li><a href="{{ url_for('users') }}">User Setup</a></li>
+{% endif %}
+{% if user_info %}
+<li><a href="{{ url_for('logout') }}">Logout</a></li>
+{% endif %}
+{% if user_info %}
+<li><a href="{{ url_for('question') }}">questions</a></li>
+{% endif %}
+{% endblock %}
 
 
 {% block body %}
 <div class="container theme-showcase" role="main">
 
+  {% for qt_i in questions_info %}
   <div class="jumbotron">
-    <h1>What?</h1>
-    <p>This is the answer.</p>
-    <p><a class="btn btn-primary btn-lg">Asked By: Herbert</a></p>
-    <p><a class="btn btn-primary btn-lg">Answered By: Anthony</a></p>
+    <h1>{{ qt_i.question_text }}</h1>
+    <p>{% if qt_i.answer_text==None %} 
+        No answers Yet
+        {% else %}
+        qt_i.answer_text
+        {% endif %} 
+    </p>
+    <p><a class="btn btn-primary btn-lg">Asked By: {{ asked_by[loop.index-1].name }}</a></p>
+    <p><a class="btn btn-primary btn-lg">Answered By: {{ answered_by[loop.index-1].name }}</a></p>
   </div>
-
+  {% endfor %}
 </div> <!-- /container -->
 {% endblock %}
 
