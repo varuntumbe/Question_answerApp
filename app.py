@@ -15,7 +15,7 @@ def close_db(err):
         g.sqlite_db.close()
 
 
-@app.route('/')
+@app.route('/') 
 def index():
     user_info=get_current_user()
     if user_info:
@@ -88,10 +88,21 @@ def question():
     return render_template('question.html',questions_info=question_lists,
     user_info=user_info,asked_by=asked_by,answered_by=answered_by)
 
-@app.route('/answer')
-def answer():
+@app.route('/answer/<question_id>')
+def answer(question_id):
     user_info=get_current_user()
-    return render_template('answer.html',user_info=user_info)
+    if user_info:
+
+        #database part
+        conn=database.get_db()
+        cur=conn.cursor()
+        cur.execute(""" 
+            SELECT * FROM questions WHERE id=(?) 
+        """,(question_id,))
+        question_info=cur.fetchone()
+        return render_template('answer.html',user_info=user_info,qinfo=question_info)
+
+    return redirect(url_for('login'),code=302)
 
 @app.route('/ask',methods=['GET','POST'])
 def ask():
@@ -128,6 +139,21 @@ def ask():
 @app.route('/unanswered')
 def unanswered():
     user_info=get_current_user()
+
+    if user_info and user_info['expert']:
+        user_id=user_info['id']
+
+        #database part
+        conn=database.get_db()
+        cur=conn.cursor()
+        cur.execute(""" 
+            SELECT name,questions.id FROM users JOIN questions
+            on users.id=questions.user_id AND questions.expert_id=(?)
+            AND questions.answer_text==NULL
+        """,(user_id,))
+        asked_by=cur.fetchall()
+        return render_template('unanswered.html',user_info=user_info,asked_by=asked_by)
+
     return render_template('unanswered.html',user_info=user_info)
 
 @app.route('/users',methods=['GET','POST'])
@@ -176,6 +202,23 @@ def promote(username):
             """,(False,username))
             conn.commit()
             return redirect(url_for('users'),code=302)            
+
+
+@app.route('/handleanswer/<question_id>',methods=['POST'])
+def store_answer(question_id):
+    user_info=get_current_user()
+    if user_info:
+        answer_text=request.form.get('answer_text')
+        #database part
+        conn=database.get_db()
+        cur=conn.cursor()
+        cur.execute(""" 
+            UPDATE questions SET answer_text=(?) 
+            WHERE id=(?)
+        """,(answer_text,question_id))
+        conn.commit()
+        return redirect(url_for('unanswered'),code=302)
+
 
 
 
